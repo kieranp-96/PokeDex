@@ -1,28 +1,43 @@
-async function fetchAndDisplayPokemon() {
+async function fetchPokeList() {
     try {
-        const listResponse = await fetch("https://pokeapi.co/api/v2/pokemon?limit=1000");
-        const listData = await listResponse.json();
-
-        const container = document.getElementById('pokemon-container');
-
-        for (const pokemon of listData.results) {
-            const detailResponse = await fetch(pokemon.url);
-            const pokemonData = await detailResponse.json();
-            console.log(pokemonData)
-            const pokemonCard = document.createElement("div");
-            pokemonCard.classList.add("pokemon")
-            pokemonCard.innerHTML = `
-                <h3>${pokemonData.name} </h3>
-                <img src="${pokemonData.sprites.front_default}" alt="${pokemonData.name}">
-                <p>Height: ${pokemonData.height} feet</p>
-                <p>Weight: ${pokemonData.weight} lbs</p>
-                <p>Types: ${pokemonData.types.map(type => type.type.name).join(', ')}</p>
-            `;
-            container.appendChild(pokemonCard);
-        }
+        const response = await fetch("https://pokeapi.co/api/v2/pokemon?limit=100");
+        return await response.json();
     } catch (error) {
-        console.error("Error fetching or displaying Pokemon:", error);
+        console.error("Error fetching PokeList:", error);
     }
 }
 
-fetchAndDisplayPokemon();
+async function fetchPokemon(pokeUrl) {
+    try {
+        const response = await fetch(pokeUrl);
+        return await response.json();
+    } catch (error) {
+        console.error("Error fetching Pokemon:", error);
+    }
+}
+
+async function displayPokemon() {
+    const containerEle = document.getElementById('pokemon-container');
+    const pokeListData = await fetchPokeList();
+
+    if (!pokeListData['results']) return;
+
+    for (const pokemon of pokeListData.results) {
+        const details = await fetchPokemon(pokemon.url);
+
+        const cardEle = document.createElement("div");
+
+        cardEle.classList.add("pokemon");
+        cardEle.innerHTML = `
+               <h3>${details.name} </h3>
+               <img src="${details.sprites.front_default}" alt="${details.name}">
+               <p>Height: ${details.height} feet</p>
+               <p>Weight: ${details.weight} lbs</p>
+               <p>Types: ${details.types.map(type => type.type.name).join(', ')}</p>
+           `;
+
+        containerEle.appendChild(cardEle);
+    }
+}
+
+displayPokemon();
